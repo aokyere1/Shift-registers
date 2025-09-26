@@ -1,0 +1,44 @@
+// This module implements an 8x1 memory, also known as a 3-input Look-Up Table (LUT).
+// Data is written serially into an 8-bit shift register when 'enable' is high.
+// The input 'S' provides the bit to be shifted in. The bit enters at Q[0],
+// and the existing bits shift towards Q[7].
+//
+// The memory can be read at any time using the 3-bit address {A, B, C}.
+// The output 'Z' provides the value of the memory bit selected by the address.
+// This implements an 8-to-1 multiplexer for the read operation.
+
+module top_module (
+    input clk,
+    input enable,
+    input S,
+    input A, B, C,
+    output Z
+);
+
+    // This 8-bit register holds the memory contents. It represents the
+    // outputs of the 8 D-type flip-flops (Q[0] through Q[7]).
+    reg [7:0] q_data;
+
+    // Sequential logic for the 8-bit shift register.
+    // On each positive clock edge, if 'enable' is asserted, the register
+    // performs a left shift, with the new bit 'S' entering at the LSB (q_data[0]).
+    // This implements the chain: S -> Q[0] -> Q[1] -> ... -> Q[7].
+    always @(posedge clk) begin
+        if (enable) begin
+            // The concatenation {q_data[6:0], S} performs the shift.
+            // q_data[0] gets S.
+            // q_data[1] gets the old value of q_data[0].
+            // ...
+            // q_data[7] gets the old value of q_data[6].
+            q_data <= {q_data[6:0], S};
+        end
+    end
+
+    // Combinational logic for the random-access read (8-to-1 Multiplexer).
+    // The 3-bit address {A, B, C} is used to select one bit from the q_data register.
+    // For example, if {A,B,C} is 3'b000, Z will be q_data[0].
+    // If {A,B,C} is 3'b101, Z will be q_data[5].
+    // This is synthesized as an 8-to-1 multiplexer.
+    assign Z = q_data[{A, B, C}];
+
+endmodule
