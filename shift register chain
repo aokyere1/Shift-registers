@@ -1,0 +1,19 @@
+module top_module (
+    input clk,
+    input resetn,   // synchronous reset (active-low)
+    input in,
+    output out
+);
+
+    reg [3:0] q;  // 4-stage shift register
+
+    always @(posedge clk) begin
+        if (!resetn)
+            q <= 4'b0000;  // reset all stages
+        else
+            q <= {q[2:0], in};  // shift and insert 'in'
+    end
+
+    assign out = q[3];  // output from the last stage
+
+endmodule
